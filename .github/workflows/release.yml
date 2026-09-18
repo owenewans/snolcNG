@@ -41,13 +41,25 @@ jobs:
           submodules: true
       - run: yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0" "ndk;29.0.14206865"
       - run: rustup target add aarch64-linux-android armv7-linux-androideabi
+      - name: install signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.SNOLC_ANDROID_KEYSTORE_B64 }}
+        run: printf '%s' "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/android-release.jks"
       - working-directory: android
-        run: ./gradlew --no-daemon assembleDebug
+        env:
+          SNOLC_ANDROID_KEYSTORE: ${{ runner.temp }}/android-release.jks
+          SNOLC_ANDROID_STORE_PASSWORD: ${{ secrets.SNOLC_ANDROID_STORE_PASSWORD }}
+          SNOLC_ANDROID_KEY_ALIAS: ${{ secrets.SNOLC_ANDROID_KEY_ALIAS }}
+          SNOLC_ANDROID_KEY_PASSWORD: ${{ secrets.SNOLC_ANDROID_KEY_PASSWORD }}
+        run: ./gradlew --no-daemon assembleRelease
       - name: verify libraries
-        run: test "$(unzip -Z1 android/app/build/outputs/apk/debug/app-debug.apk | grep -c '^lib/.*/libsnolc_.*\.so$')" -eq 22
+        run: |
+          apk=android/app/build/outputs/apk/release/app-release.apk
+          test "$(unzip -Z1 "$apk" | grep -c '^lib/.*/libsnolc_.*\.so$')" -eq 22
+          "$ANDROID_SDK_ROOT/build-tools/36.0.0/apksigner" verify --verbose "$apk"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: android-debug
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: android-release
+          path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
