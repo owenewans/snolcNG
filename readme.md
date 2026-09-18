@@ -4,11 +4,6 @@
 
 desktop and Android client for [snolc](https://github.com/owenewans/snolc).
 
-[![ci](https://github.com/owenewans/snolcNG/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/owenewans/snolcNG/actions/workflows/ci.yml)
-[![scorecard](https://api.securityscorecards.dev/projects/github.com/owenewans/snolcNG/badge)](https://securityscorecards.dev/viewer/?uri=github.com/owenewans/snolcNG)
-[![last commit](https://img.shields.io/github/last-commit/owenewans/snolcNG?logo=github)](https://github.com/owenewans/snolcNG/commits/dev)
-[![license](https://img.shields.io/github/license/owenewans/snolcNG)](LICENSE)
-
 <a href="https://count.owenewans.org/owenewans/snolcNG?theme=moebooru-h&notitle"><img src="https://count.owenewans.org/owenewans/snolcNG?theme=moebooru-h&notitle" alt="repository views"></a>
 
 `rust` `android` `egui`
