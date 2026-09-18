@@ -1,0 +1,53 @@
+name: release targets
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  desktop:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          submodules: true
+      - run: sudo apt-get update && sudo apt-get install --yes libegl1-mesa-dev libgl1-mesa-dev libwayland-dev libxkbcommon-dev
+      - run: cargo build --release --locked
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: x86_64-unknown-linux-gnu
+          path: target/release/snolcNG
+          if-no-files-found: error
+          retention-days: 7
+
+  android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          submodules: true
+      - run: yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0" "ndk;29.0.14206865"
+      - run: rustup target add aarch64-linux-android armv7-linux-androideabi
+      - working-directory: android
+        run: ./gradlew --no-daemon assembleDebug
+      - name: verify libraries
+        run: test "$(unzip -Z1 android/app/build/outputs/apk/debug/app-debug.apk | grep -c '^lib/.*/libsnolc_.*\.so$')" -eq 22
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: android-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
