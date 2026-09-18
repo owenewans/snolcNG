@@ -1,0 +1,3 @@
+[submodule "snolc-modules"]
+	path = snolc-modules
+	url = https://github.com/owenewans/snolc-modules.git
